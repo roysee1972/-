@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>English Reader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      line-height: 1.6;
+      color: #333;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    body.dark-mode {
+      background-color: #2d2d2d;
+      color: #f0f0f0;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    body.dark-mode h1 {
+      color: #f0f0f0;
+    }
+
+    /* 美化的文件选择按钮 */
+    .file-input-wrapper {
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .file-label {
+      display: inline-block;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .file-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+
+    .file-label:active {
+      transform: translateY(0);
+    }
+
+    /* 浮动面板 */
+    .floating-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      border: 2px solid #1890ff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      width: 180px;
+    }
+
+    body.dark-mode .floating-panel {
+      background: #404040;
+      border-color: #1890ff;
+      color: #f0f0f0;
+    }
+
+    .panel-section {
+      margin-bottom: 15px;
+    }
+
+    .panel-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .panel-title {
+      margin: 0 0 10px 0;
+      color: #1890ff;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    /* 声音按钮 */
+    .voice-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .voice-btn {
+      padding: 8px 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      text-align: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    body.dark-mode .voice-btn {
+      background: #505050;
+      border-color: #666;
+      color: #f0f0f0;
+    }
+
+    .voice-btn:hover {
+      border-color: #1890ff;
+      background: #f0f8ff;
+    }
+
+    body.dark-mode .voice-btn:hover {
+      background: #5a5a5a;
+    }
+
+    .voice-btn.active {
+      border-color: #1890ff;
+      background: #e6f7ff;
+      font-weight: bold;
+    }
+
+    body.dark-mode .voice-btn.active {
+      background: #1890ff;
+      color: white;
+    }
+
+    /* 主题切换按钮 */
+    .theme-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 8px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      text-align: center;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    body.dark-mode .theme-btn {
+      background: #505050;
+      border-color: #666;
+      color: #f0f0f0;
+    }
+
+    .theme-btn:hover {
+      border-color: #1890ff;
+      background: #f0f8ff;
+    }
+
+    body.dark-mode .theme-btn:hover {
+      background: #5a5a5a;
+    }
+
+    .theme-btn.active {
+      border-color: #1890ff;
+      background: #e6f7ff;
+      font-weight: bold;
+    }
+
+    body.dark-mode .theme-btn.active {
+      background: #1890ff;
+      color: white;
+    }
+
+    /* 语速控制 */
+    .speed-control {
+      margin-top: 15px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    body.dark-mode .speed-control {
+      border-top: 1px solid #555;
+    }
+
+    .speed-control label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 5px;
+      color: #666;
+    }
+
+    body.dark-mode .speed-control label {
+      color: #ccc;
+    }
+
+    .speed-slider {
+      width: 100%;
+    }
+
+    .speed-display {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    body.dark-mode .speed-display {
+      color: #ccc;
+    }
+
+    /* 句子容器 */
+    .sentence-container {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background-color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      position: relative;
+      transition: background-color 0.3s ease;
+    }
+
+    body.dark-mode .sentence-container {
+      background-color: #404040;
+      border-color: #555;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      color: #f0f0f0;
+    }
+
+    .sentence-container.active {
+      background-color: #e6f7ff;
+      border-left: 5px solid #1890ff;
+    }
+
+    body.dark-mode .sentence-container.active {
+      background-color: #1a3d5c;
+      border-left: 5px solid #1890ff;
+    }
+
+    .play-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      margin-right: 10px;
+      vertical-align: middle;
+      color: inherit;
+    }
+
+    .sentence-text {
+      display: inline-block;
+      width: calc(100% - 80px);
+      word-break: break-word;
+      font-size: 20px;
+    }
+
+    .translate-dots {
+      display: inline-block;
+      cursor: pointer;
+      font-size: 20px;
+      color: #666;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+
+    body.dark-mode .translate-dots {
+      color: #ccc;
+    }
+
+    .translation {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f0f8ff;
+      border-left: 3px solid #1890ff;
+      border-radius: 4px;
+      font-size: 16px;
+      display: none;
+    }
+
+    body.dark-mode .translation {
+      background-color: #1a3d5c;
+      color: #f0f0f0;
+    }
+
+    .status-bar {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(24, 144, 255, 0.9);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .loading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 20px;
+    }
+
+    body.dark-mode .loading {
+      color: #ccc;
+    }
+
+    .initial-message {
+      text-align: center;
+      color: #888;
+      font-size: 16px;
+      margin-top: 30px;
+    }
+
+    body.dark-mode .initial-message {
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <h1>📘 English Sentence Reader</h1>
+
+  <!-- 美化的文件选择按钮 -->
+  <div class="file-input-wrapper">
+    <input type="file" id="fileInput" accept=".txt" />
+    <label for="fileInput" class="file-label">📁 选择文件</label>
+  </div>
+
+  <!-- 浮动控制面板 -->
+  <div class="floating-panel">
+    <div class="panel-section">
+      <h3 class="panel-title">🔊 发音选择</h3>
+      <div class="voice-buttons">
+        <button class="voice-btn active" data-voice="british">🇬🇧 英式发音</button>
+        <button class="voice-btn" data-voice="american">🇺🇸 美式发音</button>
+      </div>
+    </div>
+    
+    <div class="panel-section">
+      <h3 class="panel-title">🎨 主题模式</h3>
+      <div class="theme-buttons">
+        <button class="theme-btn active" data-theme="light">☀️ 浅色</button>
+        <button class="theme-btn" data-theme="dark">🌙 深色</button>
+      </div>
+    </div>
+    
+    <div class="panel-section">
+      <div class="speed-control">
+        <label for="speedSlider">⚡ 语速调节</label>
+        <input type="range" id="speedSlider" class="speed-slider" min="0.5" max="2" step="0.1" value="1">
+        <div class="speed-display">速度: <span id="speedValue">1.0</span>x</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="output">
+    <div class="initial-message">👆 请点击上方按钮选择一个 .txt 文件开始使用</div>
+  </div>
+  <div id="statusBar" class="status-bar"></div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const outputDiv = document.getElementById('output');
+    const voiceButtons = document.querySelectorAll('.voice-btn');
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedValue = document.getElementById('speedValue');
+    const statusBar = document.getElementById('statusBar');
+
+    let utteranceQueue = [];
+    let currentUtteranceIndex = -1;
+    let isUserInterrupted = false;
+    let translationCache = {};
+    
+    // 语音设置
+    let currentVoiceType = 'british'; // 默认英式
+    let currentSpeed = 1.0;
+    let voiceMap = {
+      british: null,
+      american: null
+    };
+    let voicesLoaded = false;
+    let currentTheme = 'light';
+
+    // 显示状态信息
+    function showStatus(message) {
+      statusBar.textContent = message;
+      statusBar.style.display = 'block';
+      setTimeout(() => {
+        statusBar.style.display = 'none';
+      }, 2000);
+    }
+
+    // 主题切换功能
+    function setTheme(theme) {
+      if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+      currentTheme = theme;
+      localStorage.setItem('reader-theme', theme);
+      showStatus(theme === 'dark' ? '🌙 深色模式' : '☀️ 浅色模式');
+    }
+
+    // 初始化主题
+    const savedTheme = localStorage.getItem('reader-theme') || 'light';
+    setTheme(savedTheme);
+    document.querySelectorAll(`.theme-btn[data-theme="${savedTheme}"]`).forEach(btn => {
+      btn.classList.add('active');
+    });
+    document.querySelectorAll(`.theme-btn[data-theme="${savedTheme === 'light' ? 'dark' : 'light'}"]`).forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    // 主题按钮事件
+    themeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        themeButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        setTheme(button.dataset.theme);
+      });
+    });
+
+    // 查找合适的语音
+    function findSuitableVoices() {
+      const voices = speechSynthesis.getVoices();
+      
+      // 查找英式女声
+      voiceMap.british = voices.find(v => 
+        (v.lang === 'en-GB' || v.lang.startsWith('en-GB')) &&
+        (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman') || v.name.includes('Female'))
+      ) || voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+      // 查找美式女声
+      voiceMap.american = voices.find(v => 
+        (v.lang === 'en-US' || v.lang.startsWith('en-US')) &&
+        (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman') || v.name.includes('Female'))
+      ) || voices.find(v => v.lang === 'en-US') || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+      voicesLoaded = true;
+      console.log('找到语音:', voiceMap);
+      showStatus(`发音已准备就绪`);
+    }
+
+    // 初始化语音
+    if (speechSynthesis.getVoices().length > 0) {
+      findSuitableVoices();
+    } else {
+      window.speechSynthesis.onvoiceschanged = findSuitableVoices;
+    }
+
+    // 声音选择按钮事件
+    voiceButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        voiceButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        currentVoiceType = button.dataset.voice;
+        showStatus(`${currentVoiceType === 'british' ? '🇬🇧 英式' : '🇺🇸 美式'}发音已选择`);
+      });
+    });
+
+    // 语速控制
+    speedSlider.addEventListener('input', () => {
+      currentSpeed = parseFloat(speedSlider.value);
+      speedValue.textContent = currentSpeed.toFixed(1);
+    });
+
+    // 分割句子函数
+    function splitIntoSentences(text) {
+      return text.match(/[^\.!?]+[\.!?]+/g) || [text];
+    }
+
+    // 翻译函数
+    async function translateText(text) {
+      if (translationCache[text]) {
+        return translationCache[text];
+      }
+
+      try {
+        const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|zh`);
+        const data = await response.json();
+        const translated = data.responseData?.translatedText || "翻译失败";
+        translationCache[text] = translated;
+        return translated;
+      } catch (error) {
+        console.error("Translation error:", error);
+        return "翻译服务暂时不可用";
+      }
+    }
+
+    // 切换翻译显示
+    async function toggleTranslation(dotsElement, translationElement, sentence) {
+      if (translationElement.style.display === 'block') {
+        translationElement.style.display = 'none';
+        dotsElement.textContent = '•••';
+      } else {
+        if (!translationElement.dataset.translated) {
+          translationElement.textContent = '翻译中...';
+          translationElement.style.display = 'block';
+          const translatedText = await translateText(sentence);
+          translationElement.textContent = translatedText;
+          translationElement.dataset.translated = 'true';
+        } else {
+          translationElement.style.display = 'block';
+        }
+        dotsElement.textContent = '✕';
+      }
+    }
+
+    // 处理文件内容
+    async function handleFile(file) {
+      // 等待语音加载完成
+      if (!voicesLoaded) {
+        await new Promise(resolve => {
+          const checkVoices = setInterval(() => {
+            if (voicesLoaded) {
+              clearInterval(checkVoices);
+              resolve();
+            }
+          }, 100);
+        });
+      }
+
+      const content = await file.text();
+      const sentences = splitIntoSentences(content);
+
+      outputDiv.innerHTML = '';
+
+      if (sentences.length === 0) {
+        outputDiv.innerHTML = '<div class="loading">文件内容为空</div>';
+        return;
+      }
+
+      utteranceQueue = [];
+
+      sentences.forEach((sentence, index) => {
+        const container = document.createElement('div');
+        container.className = 'sentence-container';
+
+        const playBtn = document.createElement('button');
+        playBtn.className = 'play-btn';
+        playBtn.textContent = '▶️';
+        playBtn.onclick = () => togglePlay(index, true);
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'sentence-text';
+        textSpan.textContent = sentence.trim();
+
+        // 翻译点点
+        const dotsSpan = document.createElement('span');
+        dotsSpan.className = 'translate-dots';
+        dotsSpan.textContent = '•••';
+        
+        // 翻译结果显示区域
+        const translationDiv = document.createElement('div');
+        translationDiv.className = 'translation';
+
+        dotsSpan.onclick = () => toggleTranslation(dotsSpan, translationDiv, sentence.trim());
+
+        container.appendChild(playBtn);
+        container.appendChild(textSpan);
+        container.appendChild(dotsSpan);
+        container.appendChild(translationDiv);
+        outputDiv.appendChild(container);
+
+        const utterance = new SpeechSynthesisUtterance(sentence);
+        utterance.lang = currentVoiceType === 'british' ? 'en-GB' : 'en-US';
+        
+        // 使用当前选择的语音
+        utterance.rate = currentSpeed;
+
+        utterance.onend = () => {
+          if (currentUtteranceIndex === index) {
+            playBtn.textContent = '▶️';
+            container.classList.remove('active');
+            currentUtteranceIndex = -1;
+
+            if (!isUserInterrupted && index + 1 < sentences.length) {
+              setTimeout(() => {
+                togglePlay(index + 1, false);
+              }, 300);
+            } else {
+              isUserInterrupted = false;
+            }
+          }
+        };
+
+        utteranceQueue.push({ utterance, button: playBtn, container });
+      });
+      
+      showStatus(`已加载 ${sentences.length} 个句子`);
+    }
+
+    function togglePlay(index, isUserAction = false) {
+      if (!voicesLoaded) {
+        showStatus('语音正在加载中，请稍候...');
+        return;
+      }
+
+      const item = utteranceQueue[index];
+      if (!item) return;
+
+      const { utterance, button, container } = item;
+
+      if (index === currentUtteranceIndex) {
+        if (speechSynthesis.paused) {
+          speechSynthesis.resume();
+          button.textContent = '⏸️';
+        } else if (speechSynthesis.speaking) {
+          speechSynthesis.pause();
+          button.textContent = '▶️';
+        } else {
+          speechSynthesis.cancel();
+          clearAllActive();
+          container.classList.add('active');
+          
+          // 设置语音和语速
+          const currentVoice = voiceMap[currentVoiceType];
+          if (currentVoice) {
+            utterance.voice = currentVoice;
+          }
+          utterance.rate = currentSpeed;
+          
+          speechSynthesis.speak(utterance);
+          button.textContent = '⏸️';
+        }
+      } else {
+        speechSynthesis.cancel();
+        clearAllActive();
+        container.classList.add('active');
+        
+        // 设置语音和语速
+        const currentVoice = voiceMap[currentVoiceType];
+        if (currentVoice) {
+          utterance.voice = currentVoice;
+        }
+        utterance.rate = currentSpeed;
+        
+        speechSynthesis.speak(utterance);
+        currentUtteranceIndex = index;
+        updateButtonStates();
+      }
+
+      if (isUserAction) {
+        isUserInterrupted = true;
+      }
+    }
+
+    function updateButtonStates() {
+      utteranceQueue.forEach((item, i) => {
+        if (i === currentUtteranceIndex) {
+          item.button.textContent = '⏸️';
+        } else {
+          item.button.textContent = '▶️';
+        }
+      });
+    }
+
+    function clearAllActive() {
+      document.querySelectorAll('.sentence-container').forEach(el => {
+        el.classList.remove('active');
+      });
+    }
+
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file && file.type === "text/plain") {
+        handleFile(file);
+      } else {
+        alert("Please upload a valid .txt file.");
+        outputDiv.innerHTML = '<div class="loading">请选择有效的 .txt 文件</div>';
+      }
+    });
+  </script>
+</body>
+</html>
